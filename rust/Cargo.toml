@@ -1,5 +1,5 @@
 [package]
-name = "crop-tracker-tools"
+name = "crop-tracking"
 version = "0.1.0"
 edition = "2021"
 
