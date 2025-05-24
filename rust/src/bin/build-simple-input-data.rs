@@ -1,16 +1,26 @@
-use chrono::Utc;
+use chrono::{SecondsFormat, Utc};
+use dotenvy::dotenv;
 use serde_json::json;
 use std::env;
-use std::fs::File;
+use std::fs::{create_dir_all, File};
 use std::io::Write;
 
 fn main() {
-    // Output path is fixed — no CLI parsing
-    let path = "/crop-tracking/data/output-simple.json";
+    // Load environment variables from .env file
+    dotenv().ok();
+
+    // Get project root from environment
+    let project_root = env::var("PROJECT_ROOT").expect("PROJECT_ROOT not set in .env");
+
+    // Compute data output path
+    let data_dir = format!("{}/data", project_root);
+    let output_path = format!("{}/output-simple.json", data_dir);
+
+    // Prepare movement data
     let mut frames = Vec::new();
     let square_size = 0.05;
     let steps = 50;
-
+  
     for frame_id in 0..steps {
         let t = frame_id as f32 / (steps - 1) as f32;
         let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Micros, true);
@@ -41,11 +51,12 @@ fn main() {
             "timestamp": timestamp,
             "detections": detections
         }));
-    }
+    }    
 
-    std::fs::create_dir_all("/crop-tracking/data").expect("Could not create data directory");
+    create_dir_all(&data_dir).expect("Could not create data directory");
 
-    let mut file = File::create(path).expect("Could not create file");
+    let mut file = File::create(&output_path).expect("Could not create file");
     serde_json::to_writer_pretty(&mut file, &frames).expect("Failed to write JSON");
-    println!("Simple trajectory test data written to {}", path);
+
+    println!("✅ Simple trajectory test data written to {}", output_path);
 }

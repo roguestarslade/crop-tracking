@@ -68,7 +68,10 @@ WORKDIR ${PROJECT_ROOT}
 RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
     cp -r /tmp/clone/.git ${PROJECT_ROOT}/ && \
     rm -rf /tmp/clone
-    
+
+WORKDIR ${PROJECT_ROOT}
+COPY .env ${PROJECT_ROOT}/.env
+
 # Set entrypoint script executable
 COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh

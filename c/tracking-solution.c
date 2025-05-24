@@ -46,7 +46,20 @@ void draw_test_crosshairs() {
 }
 
 int main(int argc, char **argv) {
-    const char *output_path = "/data/visualization/tracking_summary.png";
+    const char *project_root = getenv("PROJECT_ROOT");
+    if (!project_root) {
+        fprintf(stderr, "❌ PROJECT_ROOT not set in environment\n");
+        return 1;
+    }
+
+    char output_dir[512];
+    snprintf(output_dir, sizeof(output_dir), "%s/data/visualization", project_root);
+
+    // Ensure output dir exists
+    mkdir(output_dir, 0777);
+
+    char output_path[1024];
+    snprintf(output_path, sizeof(output_path), "%s/tracking_summary.png", output_dir);
 
     printf("📐 Initializing blank image canvas...\n");
     clear_image();
