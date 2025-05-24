@@ -62,6 +62,10 @@ RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
     && cp ${C_DIR}/build/tracking-solution bin/
 
+# Force Git remote to use HTTPS instead of SSH
+WORKDIR /crop-tracking
+RUN git remote set-url origin https://github.com/roguestarslade/crop-tracking.git
+
 # Set entrypoint script executable
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
 
