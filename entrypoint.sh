@@ -1,5 +1,11 @@
 #!/bin/bash
+
 set -e
+
+if [ -d .git ]; then
+    echo "🔧 Setting Git remote to HTTPS..."
+    git remote set-url origin https://github.com/roguestarslade/crop-tracking.git || true
+fi
 
 CMD="$(basename "$0")"
 
