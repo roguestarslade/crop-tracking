@@ -1,18 +1,13 @@
-use std::fs::File;
-use std::io::Write;
-use std::env;
 use chrono::Utc;
 use rand::Rng;
 use serde_json::json;
+use std::env;
+use std::fs::File;
+use std::io::Write;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 3 || args[1] != "--input" {
-        eprintln!("Usage: build-noisy-as-fuck-input-data --input /data/noisy.json");
-        std::process::exit(1);
-    }
-
-    let path = &args[2];
+    // Output path is fixed — no CLI parsing
+    let path = "/crop-tracking/data/output-noisy.json";
     let mut rng = rand::thread_rng();
     let mut frames = Vec::new();
 
@@ -36,6 +31,8 @@ fn main() {
             "detections": detections
         }));
     }
+
+    std::fs::create_dir_all("/crop-tracking/data").expect("Could not create data directory");
 
     let mut file = File::create(path).expect("Could not create file");
     serde_json::to_writer_pretty(&mut file, &frames).expect("Failed to write JSON");
