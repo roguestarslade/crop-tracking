@@ -3,9 +3,7 @@
     "context": "..",
     "dockerFile": "../Dockerfile",
     "workspaceFolder": "/crop-tracking",
-    "mounts": [
-        "source=${localWorkspaceFolder},target=/crop-tracking,type=bind"
-    ],
+    "mounts": [],
     "settings": {
         "terminal.integrated.shell.linux": "/bin/bash"
     },

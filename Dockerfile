@@ -62,6 +62,13 @@ RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
     && cp ${C_DIR}/build/tracking-solution bin/
 
+
+WORKDIR ${PROJECT_ROOT}
+# Clone to a temp dir, copy .git, nuke temp dir
+RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
+    cp -r /tmp/clone/.git ${PROJECT_ROOT}/ && \
+    rm -rf /tmp/clone
+    
 # Set entrypoint script executable
 COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh

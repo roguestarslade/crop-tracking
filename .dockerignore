@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Rust
+target/
+
+# C Tracker
+c/build/
+
+# Data outputs
+data/
+*.json
+
+# VSCode or IDE junk
+.vscode/
+.idea/
+
+# Logs & dumps
+*.log
+*.tmp
+*.swp
+
+# MacOS / Windows trash
+.DS_Store
+Thumbs.db
