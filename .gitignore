@@ -93,7 +93,7 @@ dkms.conf
 
 # VSCode dev containers
 .vscode/
-.devcontainer/
+#.devcontainer/
 
 # OS junk
 .DS_Store
