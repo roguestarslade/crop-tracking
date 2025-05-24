@@ -62,6 +62,13 @@ RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
     && cp ${C_DIR}/build/tracking-solution bin/
 
+
+# Fix SSH key permissions so git push works
+RUN chmod 700 /root/.ssh && \
+    chmod 600 /root/.ssh/config && \
+    chmod 600 /root/.ssh/id_ed25519 && \
+    chmod 644 /root/.ssh/id_ed25519.pub
+
 # Set entrypoint script executable
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
 
