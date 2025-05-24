@@ -63,6 +63,7 @@ RUN mkdir -p bin \
     && cp ${C_DIR}/build/tracking-solution bin/
 
 # Set entrypoint script executable
+COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
 
 # Restore working directory and set entrypoint

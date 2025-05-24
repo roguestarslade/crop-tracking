@@ -3,6 +3,15 @@
     "context": "..",
     "dockerFile": "../Dockerfile",
     "workspaceFolder": "/crop-tracking",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/crop-tracking,type=bind",
-    "mounts": []
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/crop-tracking,type=bind"
+    ],
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+        "rust-lang.rust-analyzer",
+        "ms-vscode.cpptools"
+    ],
+    "postCreateCommand": "./entrypoint.sh"
 }

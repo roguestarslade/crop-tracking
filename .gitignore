@@ -119,3 +119,6 @@ ehthumbs.db
 .vscode/*.tmp
 .vscode/history/
 
+/bin
+/c/build
+/data

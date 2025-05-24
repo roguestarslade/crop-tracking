@@ -15,8 +15,16 @@ cd "${RUST_DIR}"
 cargo build --release
 
 echo "🔨 Rebuilding C tracker..."
+mkdir -p "${C_DIR}/build"
 cd "${C_DIR}/build"
+
+if [ ! -f Makefile ] && [ ! -f build.ninja ]; then
+    echo "📐 Running CMake configuration..."
+    cmake ..
+fi
+
 cmake --build .
+
 
 echo "📦 Installing binaries to $BIN_DIR..."
 mkdir -p "$BIN_DIR"
