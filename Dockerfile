@@ -29,6 +29,9 @@ RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 # Copy full repo in-place
 COPY . ${PROJECT_DIR}
 
+# Fetch stb_image_write.h into the C directory
+RUN curl -sSfL -o ${PROJECT_DIR}/c/stb_image_write.h https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+
 # Build Rust
 RUN cd rust && cargo build --release
 
