@@ -5,8 +5,6 @@ use std::fs::File;
 use std::io::Write;
 
 fn main() {
-    //test commit from Docker container, now!
-
     // Output path is fixed — no CLI parsing
     let path = "/crop-tracking/data/output-simple.json";
     let mut frames = Vec::new();
