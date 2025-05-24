@@ -6,13 +6,11 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/crop-tracking,type=bind",
     "mounts": [
         "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly",
-        "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig_host,type=bind,readonly"
+        "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig_host,type=bind,readonly",
+        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
+        "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig_host,type=bind,readonly"
     ],
-    "runArgs": [
-        "--user",
-        "1000:1000"
-    ],
-    "postCreateCommand": "[ -f /home/vscode/.gitconfig_host ] && cp /home/vscode/.gitconfig_host ~/.gitconfig || echo '⚠️  No .gitconfig found on host'",
+    "postCreateCommand": "[ -f /root/.gitconfig_host ] && cp /root/.gitconfig_host /root/.gitconfig || echo '⚠️  No .gitconfig found on host'",
     "extensions": [
         "ms-vscode.cpptools",
         "rust-lang.rust-analyzer",

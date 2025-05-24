@@ -65,11 +65,6 @@ RUN mkdir -p bin \
 # Set entrypoint script executable
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
 
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN useradd -u ${USER_ID} -m devuser && chown -R devuser:devuser /crop-tracking
-USER devuser
-
 # Restore working directory and set entrypoint
 WORKDIR ${PROJECT_ROOT}
 ENTRYPOINT ["./entrypoint.sh"]
