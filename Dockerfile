@@ -1,14 +1,17 @@
 # Base image
 FROM ubuntu:22.04
 
-# Set working directory
-WORKDIR /app
+# Define build-time variable for the workspace path
+ARG PROJECT_DIR=/crop-tracking
 
-# Environment
+# Use it as the working directory
+WORKDIR ${PROJECT_DIR}
+
+# Environment setup
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install system dependencies
+# Install build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -20,26 +23,26 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Rust via rustup
+# Install Rust
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
-# Copy and build Rust binaries
-COPY rust/ /app/rust/
-RUN cd /app/rust && cargo build --release
+# Copy full repo in-place
+COPY . ${PROJECT_DIR}
 
-# Copy and build C binary
-COPY c/ /app/c/
-RUN make -C /app/c
+# Build Rust
+RUN cd rust && cargo build --release
 
-# Copy final executables to /app/bin
-RUN mkdir -p /app/bin \
-    && cp /app/rust/target/release/build-simple-input-data /app/bin/ \
-    && cp /app/rust/target/release/build-noisy-as-fuck-input-data /app/bin/ \
-    && cp /app/c/tracking-solution /app/bin/
+# Build C
+RUN make -C c
 
-# Copy entrypoint
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Move binaries
+RUN mkdir -p bin \
+    && cp rust/target/release/build-simple-input-data bin/ \
+    && cp rust/target/release/build-noisy-as-fuck-input-data bin/ \
+    && cp c/tracking-solution bin/
+
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
 
 # Set entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
