@@ -2,12 +2,17 @@
     "name": "crop-tracking",
     "context": "..",
     "dockerFile": "../Dockerfile",
+    "runArgs": [
+        "--user",
+        "1000:1000"
+    ],
     "workspaceFolder": "/crop-tracking",
     "workspaceMount": "source=${localWorkspaceFolder},target=/crop-tracking,type=bind",
     "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly"
+        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
+        "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig_host,type=bind,readonly"
     ],
-    "postCreateCommand": "chmod 700 /root/.ssh && chmod 600 /root/.ssh/config && chmod 600 /root/.ssh/id_ed25519 && chmod 644 /root/.ssh/id_ed25519.pub",
+    "postCreateCommand": "chmod 700 /root/.ssh && chmod 600 /root/.ssh/config && chmod 600 /root/.ssh/id_ed25519 && chmod 644 /root/.ssh/id_ed25519.pub && [ -f /home/vscode/.gitconfig_host ] && cp /home/vscode/.gitconfig_host /root/.gitconfig || echo '⚠️  No .gitconfig found on host'",
     "settings": {
         "terminal.integrated.defaultProfile.linux": "bash",
         "files.eol": "\n",
