@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     gdb \
     make \
+    rsync \ 
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -65,8 +66,11 @@ RUN mkdir -p bin \
 
 WORKDIR ${PROJECT_ROOT}
 # Clone to a temp dir, copy .git, nuke temp dir
+#RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
+#    cp -r /tmp/clone/.git ${PROJECT_ROOT}/ && \
+#    rm -rf /tmp/clone
 RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
-    cp -r /tmp/clone/.git ${PROJECT_ROOT}/ && \
+    rsync -a /tmp/clone/ ${PROJECT_ROOT}/ && \
     rm -rf /tmp/clone
 
 WORKDIR ${PROJECT_ROOT}
