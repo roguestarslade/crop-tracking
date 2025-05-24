@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run: tracking-solution (C)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/app/bin/tracking-solution",
+            "args": [
+                "--input",
+                "/data/input_data.json",
+                "--output",
+                "/data/output.json",
+                "--vis-dir",
+                "/data/visualization"
+            ],
+            "cwd": "/app",
+            "MIMode": "gdb",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run: build-simple-input-data (Rust)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/app/bin/build-simple-input-data",
+            "args": [
+                "--input",
+                "/data/test_simple.json"
+            ],
+            "cwd": "/app",
+            "MIMode": "gdb",
+            "stopAtEntry": false
+        }
+    ]
+}

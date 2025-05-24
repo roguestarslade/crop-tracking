@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.tabSize": 4,
+  "files.exclude": {
+    "**/target": true,
+    "**/build": true,
+    "**/.git": true
+  },
+  "rust-analyzer.cargo.autoreload": true,
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+  "makefile.makePath": "/usr/bin/make",
+  "files.eol": "\n",
+  "files.autoGuessEncoding": true,
+  "files.insertFinalNewline": true
+}
