@@ -89,6 +89,7 @@ static QuadTreeNode* qt_create(int max_depth) {
 // ➕ Insert object into leaf
 //
 static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
+    printf("➕ Inserted object ID %d at (%.3f, %.3f)\n", obj->id, obj->x, obj->y);
     if (node->depth == QT_MAX_DEPTH || node->children[0] == NULL) {
         if (node->object_count >= node->object_capacity) {
             node->object_capacity *= 2;
@@ -116,6 +117,7 @@ static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
 // 🔍 Query region — collect overlapping objects
 //
 static void qt_query(const QuadTreeNode* node, const TrackedObject* region, TrackedObject** out_results, int* count, int max_results) {
+    printf("🔍 Query region: (%.3f, %.3f, %.3f x %.3f)\n", region->x, region->y, region->width, region->height);
     TrackedObject box = {
         .x = node->x,
         .y = node->y,
