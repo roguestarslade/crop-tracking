@@ -155,7 +155,10 @@ static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
 // 🔍 Query region — collect overlapping objects
 //
 static void qt_query(const QuadTreeNode* node, const TrackedObject* region, TrackedObject** out_results, int* count, int max_results) {
-    printf("🔍 Query region: (%.3f, %.3f, %.3f x %.3f)\n", region->x, region->y, region->width, region->height);
+    if (node->object_count > 0) {
+        printf("🔍 Query region: (%.3f, %.3f, %.3f x %.3f)\n", node->x, node->y, node->half_size * 2, node->half_size * 2);
+    }    
+
     TrackedObject box = {
         .x = node->x,
         .y = node->y,
