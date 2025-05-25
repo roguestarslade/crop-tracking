@@ -31,11 +31,11 @@ fn main() {
         let timestamp = Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true);
 
         // Slightly randomize direction
-        dx += rng.gen_range(-0.001..=0.001);
-        dy += rng.gen_range(-0.001..=0.001);
+        dx += rng.gen_range(-0.05..=0.05);
+        dy += rng.gen_range(-0.05..=0.05);
 
         // Slightly randomize size
-        size += rng.gen_range(-0.002..=0.002);
+        size += rng.gen_range(-0.01..=0.01);
         size = size.clamp(base_size, base_size * 3.0);
 
         // Move square
