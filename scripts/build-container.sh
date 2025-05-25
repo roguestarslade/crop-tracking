@@ -18,4 +18,4 @@ duration=$(( end - start ))
 
 docker build -t tracking-solution:latest .
 
-echo "✅ Done building 'crop-tracking' container in ${duration}s"
+echo "✅ Done building 'tracking-solution' container in ${duration}s"
