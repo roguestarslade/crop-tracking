@@ -2,7 +2,7 @@ use crate::models::{Detection, TrackedObject};
 use std::collections::HashMap;
 
 const MAX_MISSED_FRAMES: u32 = 3;
-const MATCH_DISTANCE_THRESHOLD: f32 = 0.05;
+const MATCH_DISTANCE_THRESHOLD: f32 = 0.25;
 
 #[derive(Debug)]
 struct TrackEntry {
