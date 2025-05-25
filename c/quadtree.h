@@ -31,6 +31,9 @@ typedef struct QuadTreeNode {
     int object_capacity;
 } QuadTreeNode;
 
+extern TrackedObject g_all_detections[];
+extern int g_detection_index;
+
 //
 // 🧱 Utility: AABB overlap
 //

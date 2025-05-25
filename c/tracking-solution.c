@@ -62,6 +62,11 @@ void queue_unmatched_object(const TrackedObject* obj) {
 void process_insert_queue() {
     for (int i = 0; i < g_insert_queue_count; i++) {
         qt_insert(g_quadtree, &g_insert_queue[i]);
+
+        // Store inserted object into global detection list
+        if (g_detection_index < MAX_DETECTIONS) {
+            g_all_detections[g_detection_index++] = g_insert_queue[i];
+        }
     }
     printf("🌱 Inserted %d new objects into QuadTree.\n", g_insert_queue_count);
     g_insert_queue_count = 0;
