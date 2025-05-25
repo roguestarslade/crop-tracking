@@ -14,15 +14,15 @@
 #define WIDTH 1000
 #define HEIGHT 1000
 #define CHANNELS 3
+#define BORDER_WIDHT 2
 
 static unsigned char image[WIDTH * HEIGHT * CHANNELS];
 
 void clear_image() {
-    for (int i = 0; i < WIDTH * HEIGHT * CHANNELS; ++i)
-        image[i] = 255;
+    memset(image, 0, sizeof(image)); // Fully transparent
 }
 
-void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
+void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
         return;
 
@@ -30,6 +30,7 @@ void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b) {
     image[index + 0] = r;
     image[index + 1] = g;
     image[index + 2] = b;
+    image[index + 3] = a;
 }
 
 void draw_test_crosshairs() {
@@ -51,6 +52,24 @@ void draw_box(float x, float y, float w, float h, uint8_t r, uint8_t g, uint8_t 
         for (int px = x0; px < x1; px++) {
             draw_pixel(px, py, r, g, b);
         }
+    }
+}
+
+void draw_border_box(float fx, float fy, float fw, float fh, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    int x0 = (int)(fx * WIDTH);
+    int y0 = (int)(fy * HEIGHT);
+    int x1 = (int)((fx + fw) * WIDTH);
+    int y1 = (int)((fy + fh) * HEIGHT);
+
+    for (int i = 0; i < BORDER_WIDTH; i++) {
+        // Top border
+        for (int x = x0; x < x1; x++) draw_pixel(x, y0 + i, r, g, b, a);
+        // Bottom border
+        for (int x = x0; x < x1; x++) draw_pixel(x, y1 - i - 1, r, g, b, a);
+        // Left border
+        for (int y = y0; y < y1; y++) draw_pixel(x0 + i, y, r, g, b, a);
+        // Right border
+        for (int y = y0; y < y1; y++) draw_pixel(x1 - i - 1, y, r, g, b, a);
     }
 }
 
@@ -95,8 +114,9 @@ void generate_images_from_json(const char *input_path, const char *vis_dir) {
             float h = cJSON_GetObjectItem(det, "height")->valuedouble;
 
             clear_image();
-            draw_box(x, y, w, h, 0, 0, 0); // draw black box
-
+            //draw_box(x, y, w, h, 0, 0, 0); // draw black box
+            draw_border_box(x, y, w, h, 255, 0, 0, 255); // red border box
+            
             char outpath[1024];
             snprintf(outpath, sizeof(outpath), "%s/frame%03d_obj%02d.png", vis_dir, frame_id->valueint, j);
 
