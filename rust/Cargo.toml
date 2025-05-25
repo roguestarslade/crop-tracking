@@ -27,3 +27,7 @@ path = "src/bin/build-simple-input-data.rs"
 [[bin]]
 name = "build-noisy-as-fuck-input-data"
 path = "src/bin/build-noisy-as-fuck-input-data.rs"
+
+[[bin]]
+name = "build-moving-square"
+path = "src/bin/build-moving-square.rs"

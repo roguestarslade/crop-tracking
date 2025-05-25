@@ -71,6 +71,7 @@ WORKDIR ${PROJECT_ROOT}
 RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-simple-input-data bin/ \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
+    && cp ${RUST_DIR}/target/release/build-moving-square bin/ \
     && cp ${C_DIR}/build/tracking-solution bin/
 
 WORKDIR ${PROJECT_ROOT}
