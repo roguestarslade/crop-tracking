@@ -15,7 +15,7 @@ fn main() {
 
     // Compute data output path
     let data_dir = format!("{}/data", project_root);
-    let output_path = format!("{}/output-noisy.json", data_dir);
+    let output_path = format!("{}/input-noisy.json", data_dir);
 
     // Prepare movement data
     let mut rng = rand::thread_rng();

@@ -14,7 +14,7 @@ fn main() {
 
     // Compute data output path
     let data_dir = format!("{}/data", project_root);
-    let output_path = format!("{}/output-simple.json", data_dir);
+    let output_path = format!("{}/input-simple.json", data_dir);
 
     // Prepare movement data
     let mut frames = Vec::new();

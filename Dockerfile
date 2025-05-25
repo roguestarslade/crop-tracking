@@ -76,6 +76,12 @@ RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && 
 WORKDIR ${PROJECT_ROOT}
 COPY .env ${PROJECT_ROOT}/.env
 
+# Set init test data script
+WORKDIR ${PROJECT_ROOT}
+COPY entrypoint.sh ${PROJECT_ROOT}/build-test-data.sh
+RUN chmod +x ${PROJECT_ROOT}/build-test-data.sh
+RUN ${PROJECT_ROOT}/build-test-data.sh
+
 # Set entrypoint script executable
 COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
 RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
