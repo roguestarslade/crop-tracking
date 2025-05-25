@@ -69,7 +69,12 @@ impl Visualizer {
         let rect = Rect::from_xywh(x, y, w, h).unwrap();
 
         let mut paint = Paint::default();
-        paint.shader = Shader::SolidColor(Color::from_rgba8(255, 0, 0, 180));
+        //paint.shader = Shader::SolidColor(Color::from_rgba8(255, 0, 0, 180));
+        let hash = obj.id.wrapping_mul(2654435761); // Knuth's multiplicative hash
+        let r = ((hash >> 0) & 0xFF) as u8;
+        let g = ((hash >> 8) & 0xFF) as u8;
+        let b = ((hash >> 16) & 0xFF) as u8;
+        paint.shader = Shader::SolidColor(Color::from_rgba8(r, g, b, 180));
 
         let stroke = Stroke {
             width: 2.0,
