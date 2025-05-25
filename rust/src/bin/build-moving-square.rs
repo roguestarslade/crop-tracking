@@ -27,9 +27,9 @@ fn main() {
     let mut frames = Vec::new();
     let mut entities: Vec<Entity> = Vec::new();
 
-    let base_size = 0.25;
+    let base_size = 0.005;
     let steps = 100;
-    let max_spawn_per_frame = 3;
+    let max_spawn_per_frame = 5;
 
     for frame_id in 0..steps {
         let timestamp = Utc::now().to_rfc3339_opts(SecondsFormat::Micros, true);
