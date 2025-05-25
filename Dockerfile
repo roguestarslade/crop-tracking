@@ -34,6 +34,11 @@ RUN apt-get update && apt-get install -y \
 # Install Rust via rustup
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
+WORKDIR ${PROJECT_ROOT}
+RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
+    rsync -a /tmp/clone/ ${PROJECT_ROOT}/ && \
+    rm -rf /tmp/clone
+
 # Copy source code into the container
 COPY rust/ ${RUST_DIR}
 COPY c/ ${C_DIR}
@@ -62,16 +67,6 @@ RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-simple-input-data bin/ \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
     && cp ${C_DIR}/build/tracking-solution bin/
-
-
-WORKDIR ${PROJECT_ROOT}
-# Clone to a temp dir, copy .git, nuke temp dir
-#RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
-#    cp -r /tmp/clone/.git ${PROJECT_ROOT}/ && \
-#    rm -rf /tmp/clone
-RUN git clone https://github.com/roguestarslade/crop-tracking.git /tmp/clone && \
-    rsync -a /tmp/clone/ ${PROJECT_ROOT}/ && \
-    rm -rf /tmp/clone
 
 WORKDIR ${PROJECT_ROOT}
 COPY .env ${PROJECT_ROOT}/.env
