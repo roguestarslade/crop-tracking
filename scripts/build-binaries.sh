@@ -37,4 +37,4 @@ echo "🚀 Running test data script: build-test-data.sh"
 chmod +x "$PROJECT_ROOT/build-test-data.sh"
 "$PROJECT_ROOT/build-test-data.sh"
 
-echo "✅ Build complete."
+echo "✅ Build complete.  "
