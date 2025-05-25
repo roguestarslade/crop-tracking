@@ -7,7 +7,6 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Set directory environment variables
 ENV PROJECT_ROOT=/crop-tracking
-ENV C_DIR=${PROJECT_ROOT}/c
 ENV RUST_DIR=${PROJECT_ROOT}/rust
 ENV SCRIPTS_DIR=${PROJECT_ROOT}/scripts
 ENV FONTS_DIR=${PROJECT_ROOT}/fonts
