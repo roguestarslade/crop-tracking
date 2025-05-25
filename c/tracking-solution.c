@@ -50,7 +50,7 @@ void draw_box(float x, float y, float w, float h, uint8_t r, uint8_t g, uint8_t 
 
     for (int py = y0; py < y1; py++) {
         for (int px = x0; px < x1; px++) {
-            draw_pixel(px, py, r, g, b);
+            draw_pixel(px, py, r, g, b, 255);
         }
     }
 }
