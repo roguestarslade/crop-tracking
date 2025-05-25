@@ -49,9 +49,11 @@ static inline bool qt_overlap(const TrackedObject* a, const TrackedObject* b) {
 }
 
 bool already_exists_in_node(QuadTreeNode *node, TrackedObject *obj) {
-    for (int i = 0; i < node->object_count; ++i) {
-        if (node->objects[i].id == obj->id)
+    for (int i = 0; i < node->object_count; i++) {
+        TrackedObject *existing = node->objects[i];
+        if (existing && existing->id == obj->id) {
             return true;
+        }
     }
     return false;
 }
@@ -61,23 +63,24 @@ void insert_object(QuadTreeNode *node, TrackedObject *obj) {
         return;
     }
 
-    if (node->count < node->max_capacity) {
-        node->objects[node->count] = obj;
-        node->count++;
+    if (node->object_count < node->object_capacity) {
+        node->objects[node->object_count++] = obj;
     } else {
-        // If this node has children, push the object to the correct child
-        if (node->divided) {
-            for (int i = 0; i < 4; i++) {
-                if (qt_contains(node->children[i], obj)) {
-                    insert_object(node->children[i], obj);
-                    return;
-                }
-            }
-        } else {
-            // Optional: handle overflow if not divided
-            fprintf(stderr, "⚠️ Warning: node full and not subdivided\n");
-        }
+        // Optional: you can subdivide or warn depending on how your tree handles overflow
+        fprintf(stderr, "⚠️ Node full at depth %d — consider subdividing.\n", node->depth);
     }
+}
+
+bool qt_contains(QuadTreeNode *node, TrackedObject *obj) {
+    float minX = node->x - node->half_size;
+    float maxX = node->x + node->half_size;
+    float minY = node->y - node->half_size;
+    float maxY = node->y + node->half_size;
+
+    float objX = obj->x;
+    float objY = obj->y;
+
+    return objX >= minX && objX <= maxX && objY >= minY && objY <= maxY;
 }
 
 //
