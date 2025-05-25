@@ -124,7 +124,7 @@ static QuadTreeNode* qt_create(int max_depth) {
 // ➕ Insert object into leaf
 //
 static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
-    printf("➕ Inserted object ID %d at (%.3f, %.3f)\n", obj->id, obj->x, obj->y);
+    //printf("➕ Inserted object ID %d at (%.5f, %.5f)\n", obj->id, obj->x, obj->y);
     if (node->depth == QT_MAX_DEPTH || node->children[0] == NULL) {
         if (node->object_count >= node->object_capacity) {
             node->object_capacity *= 2;
