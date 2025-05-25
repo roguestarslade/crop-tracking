@@ -60,11 +60,11 @@ RUN echo "🚧 Building Rust tools..." && \
     echo "✅ Rust build complete."
 
 # Build C tracker (NO CMake dependency on protobuf-c)
-WORKDIR ${C_DIR}
-RUN mkdir -p build && cd build && \
-    cmake .. && \
-    cmake --build . && \
-    echo "✅ CMake C tracker build complete."
+#WORKDIR ${C_DIR}
+#RUN mkdir -p build && cd build && \
+#    cmake .. && \
+#    cmake --build . && \
+#    echo "✅ CMake C tracker build complete."
 
 # Finalize build output in /crop-tracking/bin
 WORKDIR ${PROJECT_ROOT}
@@ -72,7 +72,7 @@ RUN mkdir -p bin \
     && cp ${RUST_DIR}/target/release/build-simple-input-data bin/ \
     && cp ${RUST_DIR}/target/release/build-noisy-as-fuck-input-data bin/ \
     && cp ${RUST_DIR}/target/release/build-moving-square bin/ \
-    && cp ${C_DIR}/build/tracking-solution bin/
+    #&& cp ${C_DIR}/build/tracking-solution bin/
 
 WORKDIR ${PROJECT_ROOT}
 COPY .env ${PROJECT_ROOT}/.env
