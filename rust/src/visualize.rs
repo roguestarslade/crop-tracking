@@ -84,28 +84,23 @@ impl Visualizer {
     }
 
     fn draw_trail(&self, pixmap: &mut Pixmap, obj: &TrackedObject) {
+        if obj.id != 1 {
+            return; // Only visualize the main object for now
+        }
+
         if let Some(history) = &obj.history {
-            let mut prev: Option<(f32, f32)> = None;
             for &(x, y) in history {
                 let px = x * IMAGE_WIDTH as f32;
                 let py = y * IMAGE_HEIGHT as f32;
-                if let Some((last_x, last_y)) = prev {
-                    let mut pb = PathBuilder::new();
-                    pb.move_to(last_x, last_y);
-                    pb.line_to(px, py);
-                    let path = pb.finish().unwrap();
 
-                    let mut paint = Paint::default();
-                    paint.shader = Shader::SolidColor(Color::from_rgba8(0, 200, 255, 128));
+                // Draw filled square (6x6 px centered)
+                let size = 6.0;
+                let rect = Rect::from_xywh(px - size / 2.0, py - size / 2.0, size, size).unwrap();
 
-                    let stroke = Stroke {
-                        width: 1.0,
-                        ..Default::default()
-                    };
+                let mut paint = Paint::default();
+                paint.shader = Shader::SolidColor(Color::from_rgba8(255, 165, 0, 220)); // orange
 
-                    pixmap.stroke_path(&path, &paint, &stroke, Transform::identity(), None);
-                }
-                prev = Some((px, py));
+                pixmap.fill_rect(rect, &paint, Transform::identity(), None);
             }
         }
     }
