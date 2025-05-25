@@ -34,8 +34,8 @@ void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 void draw_test_crosshairs() {
-    for (int x = 0; x < WIDTH; x++) draw_pixel(x, HEIGHT / 2, 255, 0, 0);
-    for (int y = 0; y < HEIGHT; y++) draw_pixel(WIDTH / 2, y, 0, 0, 255);
+    for (int x = 0; x < WIDTH; x++) draw_pixel(x, HEIGHT / 2, 255, 0, 0, 255);
+    for (int y = 0; y < HEIGHT; y++) draw_pixel(WIDTH / 2, y, 0, 0, 255, 255);
 }
 
 void print_usage() {
@@ -116,7 +116,7 @@ void generate_images_from_json(const char *input_path, const char *vis_dir) {
             clear_image();
             //draw_box(x, y, w, h, 0, 0, 0); // draw black box
             draw_border_box(x, y, w, h, 255, 0, 0, 255); // red border box
-            
+
             char outpath[1024];
             snprintf(outpath, sizeof(outpath), "%s/frame%03d_obj%02d.png", vis_dir, frame_id->valueint, j);
 
