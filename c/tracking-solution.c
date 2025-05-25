@@ -13,6 +13,9 @@
 //JSON stuff
 #include <cjson/cJSON.h>
 
+//quadtree
+#include "quadtree.h"
+
 #define WIDTH 1000
 #define HEIGHT 1000
 #define CHANNELS 4
@@ -23,6 +26,30 @@ static unsigned char image[WIDTH * HEIGHT * CHANNELS];
 static stbtt_fontinfo font;
 static unsigned char *ttf_buffer = NULL;
 static float font_scale = 0.0f;
+
+// Max objects you expect per run (adjust as needed)
+#define MAX_DETECTIONS 8192
+static DetectedObject g_all_detections[MAX_DETECTIONS];
+static int g_detection_index = 0;
+static QuadTreeNode *g_quadtree = NULL;
+
+void init_quadtree() {
+    g_quadtree = qt_create(QT_MAX_DEPTH);
+    qt_subdivide(g_quadtree, QT_MAX_DEPTH);
+    g_detection_index = 0;
+}
+
+void insert_detection_from_json(cJSON *det) {
+    if (g_detection_index >= MAX_DETECTIONS) return;
+
+    DetectedObject *obj = &g_all_detections[g_detection_index++];
+    obj->x = (float)cJSON_GetObjectItem(det, "x")->valuedouble;
+    obj->y = (float)cJSON_GetObjectItem(det, "y")->valuedouble;
+    obj->width = (float)cJSON_GetObjectItem(det, "width")->valuedouble;
+    obj->height = (float)cJSON_GetObjectItem(det, "height")->valuedouble;
+
+    qt_insert(g_quadtree, obj);
+}
 
 void clear_image() {
     memset(image, 0, sizeof(image)); // Fully transparent
@@ -224,15 +251,19 @@ int main(int argc, char **argv) {
 
     // TODO: parse input_path JSON and do real work
     clear_image();
-    draw_test_crosshairs();
+    //draw_test_crosshairs();
 
+    /*
     printf("💾 Writing visualization to %s...\n", vis_path);
     if (!stbi_write_png(vis_path, WIDTH, HEIGHT, CHANNELS, image, WIDTH * CHANNELS)) {
         fprintf(stderr, "❌ Failed to write image\n");
         return 1;
     }
+    */
 
-    generate_images_from_json(input_path, vis_dir);
+    //generate_images_from_json(input_path, vis_dir);
+
+    init_quadtree();
 
     // Stub JSON output file
     FILE *fout = fopen(output_path, "w");
