@@ -34,8 +34,8 @@ static float font_scale = 0.0f;
 static TrackedObject g_insert_queue[MAX_INSERT_QUEUE];
 static int g_insert_queue_count = 0;
 
-static TrackedObject g_all_detections[MAX_DETECTIONS];
-static int g_detection_index = 0;
+TrackedObject g_all_detections[MAX_DETECTIONS];
+int g_detection_index = 0;
 
 static int g_next_id = 1;  // start from 1
 static QuadTreeNode *g_quadtree = NULL;
