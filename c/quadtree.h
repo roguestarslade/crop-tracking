@@ -48,12 +48,36 @@ static inline bool qt_overlap(const TrackedObject* a, const TrackedObject* b) {
     return !(ax1 < bx0 || ax0 > bx1 || ay1 < by0 || ay0 > by1);
 }
 
-bool already_exists_in_node(QuadTreeNode *node, Object *obj) {
+bool already_exists_in_node(QuadTreeNode *node, TrackedObject *obj) {
     for (int i = 0; i < node->object_count; ++i) {
         if (node->objects[i].id == obj->id)
             return true;
     }
     return false;
+}
+
+void insert_object(QuadTreeNode *node, TrackedObject *obj) {
+    if (already_exists_in_node(node, obj)) {
+        return;
+    }
+
+    if (node->count < node->max_capacity) {
+        node->objects[node->count] = obj;
+        node->count++;
+    } else {
+        // If this node has children, push the object to the correct child
+        if (node->divided) {
+            for (int i = 0; i < 4; i++) {
+                if (qt_contains(node->children[i], obj)) {
+                    insert_object(node->children[i], obj);
+                    return;
+                }
+            }
+        } else {
+            // Optional: handle overflow if not divided
+            fprintf(stderr, "⚠️ Warning: node full and not subdivided\n");
+        }
+    }
 }
 
 //
