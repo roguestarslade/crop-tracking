@@ -16,4 +16,6 @@ docker build \
 end=$(date +%s)
 duration=$(( end - start ))
 
+docker build -t crop-tracking:latest .
+
 echo "✅ Done building 'crop-tracking' container in ${duration}s"

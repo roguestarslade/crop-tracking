@@ -2,13 +2,16 @@
     "name": "crop-tracking",
     "image": "crop-tracking:latest",
     "workspaceFolder": "/crop-tracking",
-    "mounts": [],
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/crop-tracking,type=bind"
+    ],
     "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "terminal.integrated.defaultProfile.linux": "bash"
     },
     "extensions": [
         "rust-lang.rust-analyzer",
         "ms-vscode.cpptools"
     ],
-    "postCreateCommand": "./entrypoint.sh"
+    "postCreateCommand": "/crop-tracking/entrypoint.sh"
 }

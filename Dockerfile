@@ -17,6 +17,7 @@ WORKDIR ${PROJECT_ROOT}
 # Install build dependencies (NO protobuf, NO protobuf-c)
 RUN apt-get update && apt-get install -y \
     build-essential \
+    bash \
     autoconf \
     automake \
     libtool \
