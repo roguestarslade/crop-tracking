@@ -14,7 +14,7 @@
 #define WIDTH 1000
 #define HEIGHT 1000
 #define CHANNELS 3
-#define BORDER_WIDHT 2
+#define BORDER_WIDTH 2
 
 static unsigned char image[WIDTH * HEIGHT * CHANNELS];
 
