@@ -22,12 +22,13 @@ RUN apt-get update && apt-get install -y \
     libtool \
     curl \
     git \
+    pkg-config \
     cmake \
     g++ \
-    pkg-config \
     gdb \
     make \
     rsync \ 
+    libcjson-dev \ 
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 

@@ -8,6 +8,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+//JSON stuff
+#include <cjson/cJSON.h>
+
 #define WIDTH 1000
 #define HEIGHT 1000
 #define CHANNELS 3
@@ -36,6 +39,68 @@ void draw_test_crosshairs() {
 
 void print_usage() {
     fprintf(stderr, "Usage: tracking-solution --input <input.json> --output <output.json> --vis-dir <dir>\n");
+}
+
+void draw_box(float x, float y, float w, float h, uint8_t r, uint8_t g, uint8_t b) {
+    int x0 = (int)(x * WIDTH);
+    int y0 = (int)(y * HEIGHT);
+    int x1 = (int)((x + w) * WIDTH);
+    int y1 = (int)((y + h) * HEIGHT);
+
+    for (int py = y0; py < y1; py++) {
+        for (int px = x0; px < x1; px++) {
+            draw_pixel(px, py, r, g, b);
+        }
+    }
+}
+
+void generate_images_from_json(const char *input_path, const char *vis_dir) {
+    FILE *fp = fopen(input_path, "rb");
+    if (!fp) {
+        fprintf(stderr, "❌ Failed to open %s\n", input_path);
+        return;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    rewind(fp);
+    char *buffer = malloc(size + 1);
+    fread(buffer, 1, size, fp);
+    buffer[size] = '\0';
+    fclose(fp);
+
+    cJSON *root = cJSON_Parse(buffer);
+    if (!root) {
+        fprintf(stderr, "❌ JSON parse error\n");
+        free(buffer);
+        return;
+    }
+
+    int frame_count = cJSON_GetArraySize(root);
+    for (int i = 0; i < frame_count; i++) {
+        cJSON *frame = cJSON_GetArrayItem(root, i);
+        cJSON *frame_id = cJSON_GetObjectItem(frame, "frame_id");
+        cJSON *detections = cJSON_GetObjectItem(frame, "detections");
+
+        int det_count = cJSON_GetArraySize(detections);
+        for (int j = 0; j < det_count; j++) {
+            cJSON *det = cJSON_GetArrayItem(detections, j);
+            float x = cJSON_GetObjectItem(det, "x")->valuedouble;
+            float y = cJSON_GetObjectItem(det, "y")->valuedouble;
+            float w = cJSON_GetObjectItem(det, "width")->valuedouble;
+            float h = cJSON_GetObjectItem(det, "height")->valuedouble;
+
+            clear_image();
+            draw_box(x, y, w, h, 0, 0, 0); // black box
+
+            char outpath[1024];
+            snprintf(outpath, sizeof(outpath), "%s/frame%03d_obj%02d.png", vis_dir, frame_id->valueint, j);
+            stbi_write_png(outpath, WIDTH, HEIGHT, CHANNELS, image, WIDTH * CHANNELS);
+        }
+    }
+
+    cJSON_Delete(root);
+    free(buffer);
 }
 
 int main(int argc, char **argv) {
@@ -78,6 +143,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "❌ Failed to write image\n");
         return 1;
     }
+
+    generate_images_from_json(input_path, vis_dir);
 
     // Stub JSON output file
     FILE *fout = fopen(output_path, "w");

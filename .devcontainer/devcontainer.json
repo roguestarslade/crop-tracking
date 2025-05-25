@@ -1,7 +1,6 @@
 {
     "name": "crop-tracking",
-    "context": "..",
-    "dockerFile": "../Dockerfile",
+    "image": "crop-tracking:latest",
     "workspaceFolder": "/crop-tracking",
     "mounts": [],
     "settings": {

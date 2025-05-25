@@ -17,6 +17,8 @@ target_include_directories(tracking-solution PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+target_link_libraries(tracking-solution cjson)
+
 # Install binary into local build/bin directory (not ../bin)
 install(TARGETS tracking-solution
     RUNTIME DESTINATION bin
