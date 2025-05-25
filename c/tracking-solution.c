@@ -71,18 +71,22 @@ void generate_images_from_json(const char *input_path, const char *vis_dir) {
 
     cJSON *root = cJSON_Parse(buffer);
     if (!root) {
-        fprintf(stderr, "❌ JSON parse error\n");
+        fprintf(stderr, "❌ JSON parse error in file: %s\n", input_path);
         free(buffer);
         return;
     }
 
     int frame_count = cJSON_GetArraySize(root);
+    printf("🧪 Found %d frame(s) in input JSON\n", frame_count);
+
     for (int i = 0; i < frame_count; i++) {
         cJSON *frame = cJSON_GetArrayItem(root, i);
         cJSON *frame_id = cJSON_GetObjectItem(frame, "frame_id");
         cJSON *detections = cJSON_GetObjectItem(frame, "detections");
 
         int det_count = cJSON_GetArraySize(detections);
+        printf("🎬 Frame %d: %d detection(s)\n", frame_id->valueint, det_count);
+
         for (int j = 0; j < det_count; j++) {
             cJSON *det = cJSON_GetArrayItem(detections, j);
             float x = cJSON_GetObjectItem(det, "x")->valuedouble;
@@ -91,11 +95,17 @@ void generate_images_from_json(const char *input_path, const char *vis_dir) {
             float h = cJSON_GetObjectItem(det, "height")->valuedouble;
 
             clear_image();
-            draw_box(x, y, w, h, 0, 0, 0); // black box
+            draw_box(x, y, w, h, 0, 0, 0); // draw black box
 
             char outpath[1024];
             snprintf(outpath, sizeof(outpath), "%s/frame%03d_obj%02d.png", vis_dir, frame_id->valueint, j);
-            stbi_write_png(outpath, WIDTH, HEIGHT, CHANNELS, image, WIDTH * CHANNELS);
+
+            if (stbi_write_png(outpath, WIDTH, HEIGHT, CHANNELS, image, WIDTH * CHANNELS)) {
+                printf("✅ Wrote: %s  (x=%.3f, y=%.3f, w=%.3f, h=%.3f)\n",
+                    outpath, x, y, w, h);
+            } else {
+                fprintf(stderr, "❌ Failed to write image: %s\n", outpath);
+            }
         }
     }
 
