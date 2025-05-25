@@ -48,6 +48,14 @@ static inline bool qt_overlap(const TrackedObject* a, const TrackedObject* b) {
     return !(ax1 < bx0 || ax0 > bx1 || ay1 < by0 || ay0 > by1);
 }
 
+bool already_exists_in_node(QuadTreeNode *node, Object *obj) {
+    for (int i = 0; i < node->object_count; ++i) {
+        if (node->objects[i].id == obj->id)
+            return true;
+    }
+    return false;
+}
+
 //
 // 🪓 Create a new QuadTree node
 //
@@ -95,7 +103,10 @@ static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
             node->object_capacity *= 2;
             node->objects = (TrackedObject**)realloc(node->objects, sizeof(TrackedObject*) * node->object_capacity);
         }
-        node->objects[node->object_count++] = obj;
+        //node->objects[node->object_count++] = obj;
+        if (!already_exists_in_node(node, obj)) {
+            insert_object(node, obj);
+        }  
         return;
     }
 
