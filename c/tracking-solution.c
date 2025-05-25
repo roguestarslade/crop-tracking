@@ -29,8 +29,15 @@ static float font_scale = 0.0f;
 
 // Max objects you expect per run (adjust as needed)
 #define MAX_DETECTIONS 8192
-static DetectedObject g_all_detections[MAX_DETECTIONS];
+#define MAX_INSERT_QUEUE 1024
+
+static TrackedObject g_insert_queue[MAX_INSERT_QUEUE];
+static int g_insert_queue_count = 0;
+
+static TrackedObject g_all_detections[MAX_DETECTIONS];
 static int g_detection_index = 0;
+
+static int g_next_id = 1;  // start from 1
 static QuadTreeNode *g_quadtree = NULL;
 
 void init_quadtree() {
@@ -39,16 +46,122 @@ void init_quadtree() {
     g_detection_index = 0;
 }
 
+void queue_unmatched_object(const TrackedObject* obj) {
+    if (g_insert_queue_count >= MAX_INSERT_QUEUE) {
+        fprintf(stderr, "❌ Insert queue overflow! Object dropped.\n");
+        return;
+    }
+
+    TrackedObject* target = &g_insert_queue[g_insert_queue_count++];
+    *target = *obj;
+    target->id = g_next_id++;  // 🆔 Assign unique ID
+
+    printf("     📥 Queued new object ID %d for insert\n", target->id);
+}
+
+void process_insert_queue() {
+    for (int i = 0; i < g_insert_queue_count; i++) {
+        qt_insert(g_quadtree, &g_insert_queue[i]);
+    }
+    printf("🌱 Inserted %d new objects into QuadTree.\n", g_insert_queue_count);
+    g_insert_queue_count = 0;
+}
+
 void insert_detection_from_json(cJSON *det) {
     if (g_detection_index >= MAX_DETECTIONS) return;
 
-    DetectedObject *obj = &g_all_detections[g_detection_index++];
+    TrackedObject *obj = &g_all_detections[g_detection_index++];
     obj->x = (float)cJSON_GetObjectItem(det, "x")->valuedouble;
     obj->y = (float)cJSON_GetObjectItem(det, "y")->valuedouble;
     obj->width = (float)cJSON_GetObjectItem(det, "width")->valuedouble;
     obj->height = (float)cJSON_GetObjectItem(det, "height")->valuedouble;
 
     qt_insert(g_quadtree, obj);
+}
+
+TrackedObject* find_closest_object(const TrackedObject* query, TrackedObject** candidates, int count) {
+    if (count == 0) return NULL;
+
+    TrackedObject* best = NULL;
+    float best_dist2 = 9999.0f;
+
+    for (int i = 0; i < count; i++) {
+        TrackedObject* target = candidates[i];
+
+        if (target->matched_this_frame) continue;  // 🛡️ Skip already-matched
+
+        float dx = query->x - target->x;
+        float dy = query->y - target->y;
+        float dist2 = dx * dx + dy * dy;
+
+        if (dist2 < best_dist2) {
+            best = target;
+            best_dist2 = dist2;
+        }
+    }
+
+    return best;
+}
+
+void process_frame_from_json(cJSON *frame) {
+    if (!frame) return;
+
+    int frame_id = cJSON_GetObjectItem(frame, "frame_id")->valueint;
+    cJSON *detections = cJSON_GetObjectItem(frame, "detections");
+    int det_count = cJSON_GetArraySize(detections);
+
+    printf("🔍 Processing Frame %d with %d detection(s)\n", frame_id, det_count);
+
+    for (int j = 0; j < det_count; j++) {
+        cJSON *det = cJSON_GetArrayItem(detections, j);
+
+        float x = (float)cJSON_GetObjectItem(det, "x")->valuedouble;
+        float y = (float)cJSON_GetObjectItem(det, "y")->valuedouble;
+        float w = (float)cJSON_GetObjectItem(det, "width")->valuedouble;
+        float h = (float)cJSON_GetObjectItem(det, "height")->valuedouble;
+
+        // Create a temporary DetectedObject
+        TrackedObject query = {
+            .x = x,
+            .y = y,
+            .width = w,
+            .height = h
+        };
+
+        // Query QuadTree for potential overlaps
+        TrackedObject *hits[32];
+        int hit_count = 0;
+        qt_query(g_quadtree, &query, hits, &hit_count, 32);
+
+        printf("   🧠 Detection %d: (x=%.3f, y=%.3f) — %d hit(s)\n", j, x, y, hit_count);
+
+        if (hit_count == 0) {
+            // ➕ No matches — handle later
+            printf("     ➕ NEW OBJECT: will be inserted later.\n");
+            queue_unmatched_object(&query);
+        } else {
+            // 📍 Matches found — handle closest resolution later
+            printf("     🔄 MATCH CANDIDATES: resolve identity next.\n");
+            TrackedObject* match = find_closest_object(&query, hits, hit_count);
+            if (match) {
+                printf("     🎯 Closest match at (x=%.3f, y=%.3f)\n", match->x, match->y);
+                match->x = query.x;
+                match->y = query.y;
+                match->width = query.width;
+                match->height = query.height;
+                match->matched_this_frame = true;
+            } else {
+                printf("     ❌ No viable match — queuing insert\n");
+                queue_unmatched_object(&query);
+            }
+        }
+    }
+}
+
+void reset_match_flags(TrackedObject *objects, int count) {
+    for (int i = 0; i < count; i++) {
+        objects[i].matched_this_frame = false;
+    }
 }
 
 void clear_image() {
@@ -264,8 +377,38 @@ int main(int argc, char **argv) {
     //generate_images_from_json(input_path, vis_dir);
 
     init_quadtree();
+    // Load and parse the input JSON for tracking logic
+    FILE *fp = fopen(input_path, "rb");
+    if (!fp) {
+        fprintf(stderr, "❌ Failed to open %s\n", input_path);
+        return 1;
+    }
+    fseek(fp, 0, SEEK_END);
+    long size = ftell(fp);
+    rewind(fp);
+    char *buffer = malloc(size + 1);
+    fread(buffer, 1, size, fp);
+    buffer[size] = '\0';
+    fclose(fp);
+
+    cJSON *root = cJSON_Parse(buffer);
+    if (!root) {
+        fprintf(stderr, "❌ JSON parse error in %s\n", input_path);
+        free(buffer);
+        return 1;
+    }
+
+    int frame_count = cJSON_GetArraySize(root);
+    for (int i = 0; i < frame_count; i++) {
+        cJSON *frame = cJSON_GetArrayItem(root, i);
+        reset_match_flags(g_all_detections, g_detection_index);
+        process_frame_from_json(frame);
+        process_insert_queue();
+        qt_prune_unmatched_objects(g_quadtree, g_all_detections, &g_detection_index);
+    }
 
     // Stub JSON output file
+    /*
     FILE *fout = fopen(output_path, "w");
     if (fout) {
         fprintf(fout, "{ \"status\": \"ok\", \"frames_processed\": 1 }\n");
@@ -274,6 +417,20 @@ int main(int argc, char **argv) {
         fprintf(stderr, "❌ Failed to write output JSON to %s\n", output_path);
         return 1;
     }
+    */
+
+    clear_image();
+    for (int i = 0; i < g_detection_index; i++) {
+        TrackedObject *obj = &g_all_detections[i];
+        draw_border_box(obj->x, obj->y, obj->width, obj->height, 0, 255, 0, 255);
+
+        char label[32];
+        snprintf(label, sizeof(label), "ID %d", obj->id);
+        draw_text((int)(obj->x * WIDTH), (int)(obj->y * HEIGHT) - 10, label);
+    }
+
+    printf("💾 Writing visualization to %s...\n", vis_path);
+    stbi_write_png(vis_path, WIDTH, HEIGHT, CHANNELS, image, WIDTH * CHANNELS);    
 
     printf("✅ Done.\n");
     return 0;

@@ -11,11 +11,13 @@
 #define QT_INIT_CAPACITY 4
 
 typedef struct {
-    float x;      // center
+    int id;
+    float x;
     float y;
     float width;
     float height;
-} DetectedObject;
+    bool matched_this_frame;
+} TrackedObject;
 
 typedef struct QuadTreeNode {
     float x, y;           // center of this node
@@ -24,7 +26,7 @@ typedef struct QuadTreeNode {
 
     struct QuadTreeNode* children[QT_CHILDREN];
 
-    DetectedObject** objects;
+    TrackedObject** objects;
     int object_count;
     int object_capacity;
 } QuadTreeNode;
@@ -32,7 +34,7 @@ typedef struct QuadTreeNode {
 //
 // 🧱 Utility: AABB overlap
 //
-static inline bool qt_overlap(const DetectedObject* a, const DetectedObject* b) {
+static inline bool qt_overlap(const TrackedObject* a, const TrackedObject* b) {
     float ax0 = a->x - a->width * 0.5f;
     float ay0 = a->y - a->height * 0.5f;
     float ax1 = a->x + a->width * 0.5f;
@@ -56,25 +58,8 @@ static QuadTreeNode* qt_create_node(float x, float y, float half_size, int depth
     node->half_size = half_size;
     node->depth = depth;
     node->object_capacity = QT_INIT_CAPACITY;
-    node->objects = (DetectedObject**)malloc(sizeof(DetectedObject*) * QT_INIT_CAPACITY);
+    node->objects = (TrackedObject**)malloc(sizeof(TrackedObject*) * QT_INIT_CAPACITY);
     return node;
-}
-
-//
-// 🌲 Build full tree to specified depth
-//
-static QuadTreeNode* qt_create(int max_depth) {
-    QuadTreeNode* root = qt_create_node(0.5f, 0.5f, 0.5f, 0);
-    if (max_depth > 0) {
-        for (int i = 0; i < QT_CHILDREN; i++) root->children[i] = NULL;
-        for (int i = 0; i < QT_CHILDREN; i++) {
-            float offset = root->half_size * 0.5f;
-            float dx = (i & 1) ? offset : -offset;
-            float dy = (i & 2) ? offset : -offset;
-            root->children[i] = qt_create_node(root->x + dx, root->y + dy, offset, 1);
-        }
-    }
-    return root;
 }
 
 //
@@ -92,13 +77,22 @@ static void qt_subdivide(QuadTreeNode* node, int max_depth) {
 }
 
 //
+// 🌲 Build full tree to specified depth
+//
+static QuadTreeNode* qt_create(int max_depth) {
+    QuadTreeNode* root = qt_create_node(0.5f, 0.5f, 0.5f, 0);
+    qt_subdivide(root, max_depth);
+    return root;
+}
+
+//
 // ➕ Insert object into leaf
 //
-static void qt_insert(QuadTreeNode* node, DetectedObject* obj) {
+static void qt_insert(QuadTreeNode* node, TrackedObject* obj) {
     if (node->depth == QT_MAX_DEPTH || node->children[0] == NULL) {
         if (node->object_count >= node->object_capacity) {
             node->object_capacity *= 2;
-            node->objects = (DetectedObject**)realloc(node->objects, sizeof(DetectedObject*) * node->object_capacity);
+            node->objects = (TrackedObject**)realloc(node->objects, sizeof(TrackedObject*) * node->object_capacity);
         }
         node->objects[node->object_count++] = obj;
         return;
@@ -106,7 +100,7 @@ static void qt_insert(QuadTreeNode* node, DetectedObject* obj) {
 
     for (int i = 0; i < QT_CHILDREN; i++) {
         QuadTreeNode* child = node->children[i];
-        DetectedObject box = {
+        TrackedObject box = {
             .x = child->x,
             .y = child->y,
             .width = child->half_size * 2,
@@ -121,8 +115,8 @@ static void qt_insert(QuadTreeNode* node, DetectedObject* obj) {
 //
 // 🔍 Query region — collect overlapping objects
 //
-static void qt_query(const QuadTreeNode* node, const DetectedObject* region, DetectedObject** out_results, int* count, int max_results) {
-    DetectedObject box = {
+static void qt_query(const QuadTreeNode* node, const TrackedObject* region, TrackedObject** out_results, int* count, int max_results) {
+    TrackedObject box = {
         .x = node->x,
         .y = node->y,
         .width = node->half_size * 2,
@@ -141,6 +135,49 @@ static void qt_query(const QuadTreeNode* node, const DetectedObject* region, Det
             qt_query(node->children[i], region, out_results, count, max_results);
         }
     }
+}
+
+static void qt_clear_objects(QuadTreeNode* node) {
+    if (!node) return;
+
+    node->object_count = 0;
+
+    if (node->children[0] != NULL) {
+        for (int i = 0; i < QT_CHILDREN; i++) {
+            qt_clear_objects(node->children[i]);
+        }
+    }
+}
+
+static void qt_prune_unmatched_objects(QuadTreeNode* tree, TrackedObject* all, int* count_ptr) {
+    int new_count = 0;
+    int original_count = *count_ptr;
+
+    for (int i = 0; i < original_count; i++) {
+        TrackedObject* obj = &all[i];
+        if (obj->matched_this_frame) {
+            obj->matched_this_frame = false;
+            all[new_count++] = *obj;
+        }
+    }
+
+    *count_ptr = new_count;
+    qt_clear_objects(tree);
+
+    for (int i = 0; i < new_count; i++) {
+        qt_insert(tree, &all[i]);
+    }
+
+    printf("🧹 Pruned %d stale object(s); %d remain\n", original_count - new_count, new_count);
+}
+
+static void qt_move_object(QuadTreeNode* tree, TrackedObject* obj, float new_x, float new_y, float new_w, float new_h) {
+    obj->x = new_x;
+    obj->y = new_y;
+    obj->width = new_w;
+    obj->height = new_h;
+
+    qt_insert(tree, obj); // reinserts it — may appear in multiple overlapping nodes
 }
 
 //
