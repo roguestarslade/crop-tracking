@@ -65,10 +65,6 @@ RUN mkdir -p bin && \
 WORKDIR ${PROJECT_ROOT}
 COPY .env ${PROJECT_ROOT}/.env
 
-# Set entrypoint script executable
-COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
-RUN chmod +x ${PROJECT_ROOT}/entrypoint.sh
-
 # Restore working directory and set entrypoint
 WORKDIR ${PROJECT_ROOT}
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["${PROJECT_ROOT}/bin/crop-tracking"]
