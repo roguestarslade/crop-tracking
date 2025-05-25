@@ -2,7 +2,8 @@ use crate::models::{Detection, TrackedObject};
 use std::collections::HashMap;
 
 const MAX_MISSED_FRAMES: u32 = 3;
-const MATCH_DISTANCE_THRESHOLD: f32 = 0.5;
+const MATCH_DISTANCE_THRESHOLD: f32 = 0.05;
+const SIZE_SIMILARITY_THRESHOLD: f32 = 0.05;
 
 #[derive(Debug)]
 struct TrackEntry {
@@ -33,17 +34,31 @@ impl Tracker {
         let mut unmatched_tracks: Vec<u32> = self.tracks.keys().cloned().collect();
 
         for det in detections {
-            if let Some((track_id, dist)) = self
-                .tracks
-                .iter()
-                .filter(|(_, t)| t.missed < MAX_MISSED_FRAMES)
-                .map(|(id, t)| {
-                    let d2 = (det.x - t.x).powi(2) + (det.y - t.y).powi(2);
-                    (*id, d2.sqrt())
-                })
-                .filter(|(_, d)| *d < MATCH_DISTANCE_THRESHOLD)
-                .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-            {
+            let mut best_match: Option<(u32, f32)> = None;
+
+            for (&track_id, track) in self.tracks.iter().filter(|(_, t)| t.missed < MAX_MISSED_FRAMES) {
+                let dx = det.x - track.x;
+                let dy = det.y - track.y;
+                let dw = (det.width - track.width).abs();
+                let dh = (det.height - track.height).abs();
+
+                let distance = (dx * dx + dy * dy).sqrt();
+                let size_diff = dw + dh;
+
+                if distance < MATCH_DISTANCE_THRESHOLD && size_diff < SIZE_SIMILARITY_THRESHOLD {
+                    match best_match {
+                        Some((_, best_dist)) if distance < best_dist => {
+                            best_match = Some((track_id, distance));
+                        }
+                        None => {
+                            best_match = Some((track_id, distance));
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            if let Some((track_id, _)) = best_match {
                 let track = self.tracks.get_mut(&track_id).unwrap();
                 track.x = det.x;
                 track.y = det.y;
@@ -51,6 +66,7 @@ impl Tracker {
                 track.height = det.height;
                 track.missed = 0;
                 track.history.push((det.x, det.y));
+
                 assigned_ids.push(TrackedObject {
                     id: track.id,
                     x: det.x,
@@ -59,11 +75,13 @@ impl Tracker {
                     height: det.height,
                     history: Some(track.history.clone()),
                 });
+
                 unmatched_tracks.retain(|id| *id != track_id);
             } else {
-                // Create new track
+                // New track
                 let id = self.next_id;
                 self.next_id += 1;
+
                 self.tracks.insert(
                     id,
                     TrackEntry {
@@ -76,6 +94,7 @@ impl Tracker {
                         history: vec![(det.x, det.y)],
                     },
                 );
+
                 assigned_ids.push(TrackedObject {
                     id,
                     x: det.x,
@@ -87,14 +106,14 @@ impl Tracker {
             }
         }
 
-        // Update missed counts for unmatched tracks
+        // Update missed counters
         for id in unmatched_tracks {
             if let Some(t) = self.tracks.get_mut(&id) {
                 t.missed += 1;
             }
         }
 
-        // Prune forgotten tracks
+        // Prune old tracks
         self.tracks.retain(|_, t| t.missed <= MAX_MISSED_FRAMES);
 
         assigned_ids
