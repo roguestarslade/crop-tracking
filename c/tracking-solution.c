@@ -7,19 +7,58 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
 
 //JSON stuff
 #include <cjson/cJSON.h>
 
 #define WIDTH 1000
 #define HEIGHT 1000
-#define CHANNELS 3
+#define CHANNELS 4
 #define BORDER_WIDTH 2
 
 static unsigned char image[WIDTH * HEIGHT * CHANNELS];
 
+static stbtt_fontinfo font;
+static unsigned char *ttf_buffer = NULL;
+static float font_scale = 0.0f;
+
 void clear_image() {
     memset(image, 0, sizeof(image)); // Fully transparent
+}
+
+void blit_glyph(int x, int y, int w, int h, unsigned char *bitmap) {
+    for (int dy = 0; dy < h; dy++) {
+        for (int dx = 0; dx < w; dx++) {
+            int gx = x + dx;
+            int gy = y + dy;
+            if (gx < 0 || gx >= WIDTH || gy < 0 || gy >= HEIGHT)
+                continue;
+            int alpha = bitmap[dy * w + dx];
+            int idx = (gy * WIDTH + gx) * CHANNELS;
+            image[idx + 0] = 255;   // white text
+            image[idx + 1] = 255;
+            image[idx + 2] = 255;
+            image[idx + 3] = alpha;
+        }
+    }
+}
+
+void draw_text(int x, int y, const char *text) {
+    int px = x;
+
+    for (const char *p = text; *p; p++) {
+        int w, h, xoff, yoff;
+        unsigned char *bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, *p, &w, &h, &xoff, &yoff);
+        blit_glyph(px + xoff, y + yoff, w, h, bitmap);
+
+        int advance, lsb;
+        stbtt_GetCodepointHMetrics(&font, *p, &advance, &lsb);
+        px += (int)(advance * font_scale);
+
+        stbtt_FreeBitmap(bitmap, NULL);
+    }
 }
 
 void draw_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
@@ -117,6 +156,10 @@ void generate_images_from_json(const char *input_path, const char *vis_dir) {
             //draw_box(x, y, w, h, 0, 0, 0); // draw black box
             draw_border_box(x, y, w, h, 255, 0, 0, 255); // red border box
 
+            char label[64];
+            snprintf(label, sizeof(label), "F%03d O%02d", frame_id->valueint, j);
+            draw_text(10, 30, label);  // draw top-left, can reposition            
+
             char outpath[1024];
             snprintf(outpath, sizeof(outpath), "%s/frame%03d_obj%02d.png", vis_dir, frame_id->valueint, j);
 
@@ -159,6 +202,21 @@ int main(int argc, char **argv) {
 
     // Ensure output directory exists
     mkdir(vis_dir, 0777);
+
+    FILE *font_file = fopen("/crop-tracking/fonts/DejaVuSansMono.ttf", "rb");
+    if (!font_file) {
+        fprintf(stderr, "❌ Could not load DejaVuSansMono.ttf\n");
+        return 1;
+    }
+    ttf_buffer = malloc(1 << 20); // 1 MB
+    fread(ttf_buffer, 1, 1 << 20, font_file);
+    fclose(font_file);
+
+    if (!stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer, 0))) {
+        fprintf(stderr, "❌ Font init failed\n");
+        return 1;
+    }
+    font_scale = stbtt_ScaleForPixelHeight(&font, 28);  // ~28px tall    
 
     // Build image output path
     char vis_path[1024];

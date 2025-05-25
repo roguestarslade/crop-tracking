@@ -10,6 +10,7 @@ ENV PROJECT_ROOT=/crop-tracking
 ENV C_DIR=${PROJECT_ROOT}/c
 ENV RUST_DIR=${PROJECT_ROOT}/rust
 ENV SCRIPTS_DIR=${PROJECT_ROOT}/scripts
+ENV FONTS_DIR=${PROJECT_ROOT}/fonts
 
 # Set working directory to project root
 WORKDIR ${PROJECT_ROOT}
@@ -46,9 +47,11 @@ COPY rust/ ${RUST_DIR}
 COPY c/ ${C_DIR}
 COPY scripts/ ${SCRIPTS_DIR}
 COPY entrypoint.sh ${PROJECT_ROOT}/entrypoint.sh
+COPY fonts/ ${FONTS_DIR}
 
 # Download stb_image_write.h into the C directory
 RUN curl -sSfL -o ${C_DIR}/stb_image_write.h https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+RUN curl -sSfL -o ${C_DIR}/stb_truetype.h https://raw.githubusercontent.com/nothings/stb/master/stb_truetype.h
 
 # Build Rust tools (assumes you are NOT using .proto files anymore)
 WORKDIR ${RUST_DIR}
